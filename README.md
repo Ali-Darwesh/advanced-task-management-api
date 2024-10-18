@@ -8,7 +8,7 @@ I can create projects and add users to it with differente roles :
 
 ## Pastman
 
--   postman/endPointTask6.postman_collection.json
+-   endPoint7.postman_collection.json
 
 ## create the project
 
