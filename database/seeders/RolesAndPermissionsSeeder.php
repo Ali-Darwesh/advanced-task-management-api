@@ -30,7 +30,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Assign permissions to roles
         $adminRole->permissions()->attach([$assignRole->id, $addComment->id, $addAttachment->id]);
         $adminRole->permissions()->attach([$createTask->id]);
-        $managerRole->permissions()->attach([$assignTask->id, $addComment->id, $addAttachment->id]);
+        $managerRole->permissions()->attach([$assignTask->id, $addComment->id, $addAttachment->id,$createTask->id]);
         $developerRole->permissions()->attach([$updateTaskStatus->id, $addComment->id, $addAttachment->id]);
     }
 }

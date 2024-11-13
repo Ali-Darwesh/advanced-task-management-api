@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\User;
 use Exception;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -39,7 +41,8 @@ class AuthService
                 'status' => 200
             ];
         } catch (Exception $e) {
-            return ['message' => 'Create user failed', 'error' => $e, 'status' => 404];
+            Log::error('Error creating user: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
     //==========================
@@ -72,7 +75,8 @@ class AuthService
                 'status' => 200
             ];
         } catch (Exception $e) {
-            return ['message' => 'login user failed', 'error' => $e, 'status' => 404];
+            Log::error('Error login user: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
     /**
@@ -87,7 +91,8 @@ class AuthService
             JWTAuth::invalidate(JWTAuth::getToken());
             return ['message' => 'Successfully logged out', 'status' => 200];
         } catch (Exception $e) {
-            return ['message' => 'logout user failed', 'error' => $e, 'status' => 404];
+            Log::error('Error logout user: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
 }

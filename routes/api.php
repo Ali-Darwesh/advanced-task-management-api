@@ -29,7 +29,7 @@ Route::group([
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
     Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api')->name('refresh');
 });
-Route::middleware(['auth:api', 'permission:assign-role', 'throttle:30,1'])->group(function () {
+Route::middleware(['auth:api', 'role:admin', 'throttle:30,1'])->group(function () {
     Route::post('/users/{id}/assign-role', [UserController::class, 'assignRole']);
 });
 
@@ -37,19 +37,25 @@ Route::middleware(['auth:api', 'permission:assign-role', 'throttle:30,1'])->grou
 //=====================
 //=====   Tasks   =====
 //=====================
-// Route::middleware(['auth:api', 'permission:create-task', 'throttle:30,1'])->group(function () {
-Route::post('/tasks', [TaskController::class, 'store']);
-Route::post('/update-task/{task}', [TaskController::class, 'update']);
-// });
-Route::middleware(['auth:api', 'permission:assign-task', 'throttle:30,1'])->group(function () {
+Route::middleware(['auth:api', 'role:admin,manager', 'throttle:30,1'])->group(function () {
+    Route::post('/tasks', [TaskController::class, 'store']);
+    Route::post('/update-task/{task}', [TaskController::class, 'update'])->name('api.update-task');
+});
+Route::middleware(['auth:api', 'role:admin,manager', 'throttle:30,1'])->group(function () {
     Route::post('/tasks/{task}/reassign', [TaskController::class, 'reassignTask']);
 });
-Route::middleware(['auth:api', 'permission:update-task-status', 'throttle:30,1'])->group(function () {
+Route::middleware(['auth:api', 'role:admin,manager,developer', 'throttle:30,1'])->group(function () {
     Route::post('/tasks/{task}/status', [TaskController::class, 'updateTaskStatus']);
 });
-Route::middleware(['auth:api', 'permission:add-comment', 'throttle:30,1'])->group(function () {
+Route::middleware(['auth:api', 'role:admin,manager,developer', 'throttle:30,1'])->group(function () {
     Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
 });
-Route::middleware(['auth:api', 'permission:add-attachment', 'throttle:30,1'])->group(function () {
+Route::middleware(['auth:api', 'role:admin,manager,developer', 'throttle:30,1'])->group(function () {
     Route::post('tasks/{taskId}/attachments', [AttachmentController::class, 'store']);
 });
+
+
+// Add a dependency between tasks (POST request)
+Route::post('tasks/{taskId}/dependencies', [TaskController::class, 'addDependency']);
+// Route to remove a single dependency from a task
+Route::post('tasks/{taskId}/delete-dependencies', [TaskController::class, 'removeDependency']);

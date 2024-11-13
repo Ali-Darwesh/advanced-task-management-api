@@ -6,6 +6,8 @@ use App\Models\Comment;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Log;
 
 use function PHPUnit\Framework\isNull;
 
@@ -23,7 +25,8 @@ class CommentService
             $comment = Comment::create($data);
             return ['message' => 'comment created successfully', 'comment' => $comment, 'status' => 200];
         } catch (Exception $e) {
-            return ['message' => 'create comment failed', 'error' => $e, 'status' => 404];
+            Log::error('Error create comment: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
     /**
@@ -41,7 +44,8 @@ class CommentService
             $comment->update($data);
             return ['message' => 'comment updated successfully', 'comment' => $comment, 'status' => 200];
         } catch (Exception $e) {
-            return ['message' => 'Update comment failed', 'error' => $e, 'status' => 404];
+            Log::error('Error updating comment: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
     /**
@@ -57,7 +61,8 @@ class CommentService
             $comment->delete();
             return ['message' => 'Comment deleted successfully', 'status' => 200];
         } catch (Exception $e) {
-            return ['message' => 'Delete comment failed', 'error' => $e, 'status' => 404];
+            Log::error('Error deleting comment: ' . $e->getMessage());
+            throw new HttpResponseException(response()->json(['message' => 'there is something wrong in server'], status: 500));
         }
     }
 }

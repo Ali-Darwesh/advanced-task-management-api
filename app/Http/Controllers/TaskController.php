@@ -64,6 +64,10 @@ class TaskController extends Controller
     {
         $validatedData = $request->validated();
         $task = $this->taskService->updateTask($task, $validatedData);
+        if ($task['task']->status == "completed") {
+            $this->updateDependentTasksStatus($task);
+        }
+
         return $this->success($task['task'], $task['message'], $task['status']);
     }
     /**
@@ -100,6 +104,59 @@ class TaskController extends Controller
         }
 
         return response()->json(['message' => 'Attachment added successfully'], 200);
+    }
+
+
+    public function addDependency(Request $request, $taskId)
+    {
+        $request->validate([
+            'depends_on' => 'exists:tasks,id', // Make sure each dependency exists in the 'tasks' table
+        ]);
+        $dependencyId = $request->input('depends_on');
+        if ($taskId == $dependencyId) {
+            return response()->json(['error' => 'A task cannot depend on itself.'], 400);
+        }
+        $task = Task::findOrFail($taskId);
+        $dependency = Task::findOrFail($request->input('depends_on'));
+        if ($task->dependencies()->where('depends_on_task_id', $dependencyId)->exists()) {
+            return response()->json(['error' => 'This dependency already exists.'], 409);
+            // الحصول على المهمة الأصلية والمهمة المعتمدة
+        }
+        if ($dependency->dependencies()->where('depends_on_task_id', $taskId)->exists()) {
+            return response()->json(['error' => 'This dependency not correct.'], 409);
+            // الحصول على المهمة الأصلية والمهمة المعتمدة
+        }
+
+        // إضافة التبعية بين المهام
+        $task->dependencies()->attach($dependency);
+
+        // إذا كانت المهمة المعتمدة غير مكتملة، قم بتعيين حالة المهمة إلى Blocked
+        if ($dependency->status !== 'completed') {
+            $task->status = 'blocked';
+            $task->save();
+        }
+
+        return response()->json([
+            'message' => 'Dependency added successfully!',
+            'task' => $task
+        ]);
+    }
+
+    // Method to remove a single dependency from a task
+    public function removeDependency(Request $request, $taskId)
+    {
+        // Validate the input data
+        $request->validate([
+            'depends_on' => 'required|exists:tasks,id', // The task ID to remove from dependencies
+        ]);
+
+        // Find the task from which dependencies will be removed
+        $task = Task::findOrFail($taskId);
+
+        // Detach the specified dependency
+        $task->dependencies()->detach($request->input('depends_on'));
+
+        return response()->json(['message' => 'Dependency removed successfully.'], 200);
     }
 
     /**
